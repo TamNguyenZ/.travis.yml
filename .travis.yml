@@ -1,0 +1,27 @@
+language: shell
+os: windows
+dist: windows-2019
+
+jobs:
+  include:
+    - name: Windows VM with RDP and Pinggy
+      script:
+        - powershell.exe -Command "
+            # Set Administrator password
+            $password = ConvertTo-SecureString 'Xy!9#2025_RdpStrong*' -AsPlainText -Force;
+            Set-LocalUser -Name 'Administrator' -Password $password;
+            Enable-LocalUser -Name 'Administrator';
+
+            # Enable RDP
+            Set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -Name 'fDenyTSConnections' -Value 0;
+            Enable-NetFirewallRule -DisplayGroup 'Remote Desktop';
+
+            # Run Pinggy tunnel
+            & 'C:\\Program Files\\Git\\usr\\bin\\ssh.exe' -p 443 -R0:localhost:3389 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 lVuaQjAzw82+tcp@free.pinggy.io;
+
+            # Keep VM alive
+            for ($i=0; $i -lt 360; $i++) {
+              Start-Sleep -Seconds 60;
+              Write-Host 'Running ' $i ' minutes';
+            }
+          "
